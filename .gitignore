@@ -1,2 +1,2 @@
-﻿Cargo.lock
-target
+target/**/*
+target/*

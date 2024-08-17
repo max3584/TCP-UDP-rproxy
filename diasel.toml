@@ -1,0 +1,2 @@
+[database]
+url = "mysql://debug-user:debug_pass@test0.dev.home/test1"
