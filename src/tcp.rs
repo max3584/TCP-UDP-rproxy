@@ -16,60 +16,59 @@ struct TCPPeerPair {
 }
 
 impl TCPPeerPair {
-		async fn run(mut self) -> Result<(), std::io::Error>{
-				// let mut outbound = TcpStream::connect(self.remote.clone()).await?;
+	async fn run(mut self) -> Result<(), std::io::Error>{
+		// let mut outbound = TcpStream::connect(self.remote.clone()).await?;
 
-				// let (mut ri, mut wi) = self.client.split();
-				// let (mut ro, mut wo) = outbound.split();
+		// let (mut ri, mut wi) = self.client.split();
+		// let (mut ro, mut wo) = outbound.split();
 
-				// let client_to_server = async {
-				//     tokio::io::copy(&mut ri, &mut wo).await?;
-				//     wo.shutdown().await
-				// };
+		// let client_to_server = async {
+		//     tokio::io::copy(&mut ri, &mut wo).await?;
+		//     wo.shutdown().await
+		// };
 
-				// let server_to_client = async {
-				//     tokio::io::copy(&mut ro, &mut wi).await?;
-				//     wi.shutdown().await
-				// };
-				// try_join(client_to_server, server_to_client).await?;
-				let mut outbound = TcpStream::connect(self.remote.clone()).await?;
-				match tokio::io::copy_bidirectional(&mut self.client, &mut outbound).await {
-					Ok(tx) => {
-						info!("[TCP] [Proxy] Copy data: {:?}", tx);
-					},
-					Err(e) => {
-						error!("[TCP] [PROXY] Failed to copy data: {:?}", e);
-					}
-				}
-				outbound.shutdown().await?;
-				self.client.shutdown().await?;
-				Ok(())
+		// let server_to_client = async {
+		//     tokio::io::copy(&mut ro, &mut wi).await?;
+		//     wi.shutdown().await
+		// };
+		// try_join(client_to_server, server_to_client).await?;
+		let mut outbound = TcpStream::connect(self.remote.clone()).await?;
+		match tokio::io::copy_bidirectional(&mut self.client, &mut outbound).await {
+			Ok(tx) => {
+				info!("[TCP] [Proxy] Copy data: {:?}", tx);
+			},
+			Err(e) => {
+				error!("[TCP] [PROXY] Failed to copy data: {:?}", e);
+			}
 		}
+		outbound.shutdown().await?;
+		self.client.shutdown().await?;
+		Ok(())
+	}
 }
 pub struct TCPProxy {
-		pub signal_addr: String,
-		pub addr: String,
-		pub remote: Arc<Mutex<String>>,
-		pub stop: Arc<Mutex<bool>>,
-		pub dns: Vec<String>
+	pub signal_addr: String,
+	pub addr: String,
+	pub remote: Arc<Mutex<String>>,
+	pub stop: Arc<Mutex<bool>>,
+	pub dns: Vec<String>
 }
 
 impl DNSResolve for TCPProxy {
-		fn remote(&self) -> String {
-			let remote = format!("{}", self.remote.lock().unwrap());
-			return remote;
-		}
-		fn client(&self) -> &String{
-			&self.addr
-		}
-		fn dns(&self) -> &Vec<String>{
-			&self.dns
-		}
-		fn reset_dns(&mut self,d: &Vec<String>) -> usize {
-			self.dns = d.to_vec();
-			self.dns.len()
-		}
-
+	fn remote(&self) -> String {
+		let remote = format!("{}", self.remote.lock().unwrap());
+		return remote;
+	}
+	fn client(&self) -> &String{
+		&self.addr
+	}
+	fn dns(&self) -> &Vec<String>{
+		&self.dns
+	}
+	fn reset_dns(&mut self,d: &Vec<String>) -> usize {
+		self.dns = d.to_vec();
+		self.dns.len()
+	}
 }
 
 impl TCPProxy {
