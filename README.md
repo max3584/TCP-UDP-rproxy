@@ -29,7 +29,7 @@ cd ..
 ```bash
 nc 127.0.0.1 8080
 # UP TCP Reverse Proxy 
-{"property":"UP","listen_addr":"0.0.0.0","listen_port":8888,"remote_addr":"192.168.1.2","remote_port":8080,"protocol":"TCP"}
+{"property":"UP","listen_addr":"192.168.1.1","listen_port":8888,"remote_addr":"192.168.1.2","remote_port":8080,"protocol":"TCP"}
 
 # STOP TCP Reverse Proxy
 nc 127.0.0.2 8888
