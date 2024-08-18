@@ -35,10 +35,10 @@ impl TCPPeerPair {
 				let mut outbound = TcpStream::connect(self.remote.clone()).await?;
 				match tokio::io::copy_bidirectional(&mut self.client, &mut outbound).await {
 					Ok(tx) => {
-						info!("Copy data: {:?}", tx);
+						info!("[TCP] [Proxy] Copy data: {:?}", tx);
 					},
 					Err(e) => {
-						error!("Failed to copy data: {:?}", e);
+						error!("[TCP] [PROXY] Failed to copy data: {:?}", e);
 					}
 				}
 				outbound.shutdown().await?;
@@ -99,7 +99,7 @@ impl TCPProxy {
 
 			match TcpListener::bind(&bind_addr).await {
 				Ok(listener) => {
-					info!("Listening on {}", &listener.local_addr().unwrap());
+					info!("[TCP] Listening on {}", &listener.local_addr().unwrap());
 					loop{
 						tokio::select!{
 							x = listener.accept() => {
@@ -112,7 +112,7 @@ impl TCPProxy {
 										tokio::spawn(client.run());
 									},
 									Err(e1) => {
-										error!("Failed to accept new connection from {}, err={:?}", &bind_addr, e1);
+										error!("[TCP] Failed to accept new connection from {}, err={:?}", &bind_addr, e1);
 									}
 								}
 							},
@@ -129,12 +129,13 @@ impl TCPProxy {
 					Ok::<(),std::io::Error>(())
 				},
 				Err(e) => {
-					error!("Failed to bind interface {}, err={:?}", &bind_addr, e);
+					error!("[TCP] Failed to bind interface {}, err={:?}", &bind_addr, e);
 					Ok(())
 				}
 			}
 		};
 
+		info!("[PCI] [TCP] Controller is running on port {}", signal_addr);
 		let control = async move {
 			sync(signal_addr, remote_signal, stop_signal).await;
 			Ok(())

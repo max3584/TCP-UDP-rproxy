@@ -53,7 +53,7 @@ impl UDPPeerPair {
 		let remote_addr = self.remote;
 		let (ctrl_tx, mut ctrl_rx) = unbounded::<MessageType>();
 
-		info!("[UDP] Starting Proxy {}:{} <-> {}:{}",
+		info!("[UDP] [Proxy] Starting Proxy {}:{} <-> {}:{}",
 			client_peer.ip(),
 			client_peer.port(),
 			remote_addr.ip(),
@@ -68,7 +68,7 @@ impl UDPPeerPair {
 
 					match msg_type {
 						MessageType::Terminate => {
-							debug!("{}:{} sends TERMINATE signal", client_peer.ip(), client_peer.port());
+							debug!("[UDP] [Proxy] {}:{} sends TERMINATE signal", client_peer.ip(), client_peer.port());
 							ctrl_tx.unbounded_send(MessageType::Terminate).unwrap();
 							break;
 						},
@@ -110,7 +110,7 @@ impl UDPPeerPair {
 						if let Some(msg_type) = y{
 							match msg_type{
 								MessageType::Terminate => {
-									debug!("{}:{} recvs TERMINATE signal", client_peer.ip(), client_peer.port());
+									debug!("[UDP] [Proxy] {}:{} recvs TERMINATE signal", client_peer.ip(), client_peer.port());
 									break;
 								},
 								_ =>{
@@ -181,7 +181,7 @@ impl UDPProxy {
 		let signal_addr = self.signal_addr.clone();
 
 		let socket = Arc::new(UdpSocket::bind(&self.addr).await.unwrap());
-		info!("Listening on {}", socket.local_addr().unwrap());
+		info!("[UDP] Listening on {}", socket.local_addr().unwrap());
 
 		self.resolve().await.unwrap();
 		let mut dns_timeout = time::interval(tokio::time::Duration::from_secs(30));
@@ -227,7 +227,7 @@ impl UDPProxy {
 										// _tx.unbounded_send((peer, Vec::from(&buf[..size]), MessageType::Data)).unwrap();
 									},
 									_ => {
-										info!("New client {}:{} is added", peer.ip(), peer.port());
+										info!("[UDP] New client {}:{} is added", peer.ip(), peer.port());
 										let (mut _s,_r) = unbounded::<(SocketAddr, Vec<u8>,  MessageType)>();
 										// _s.unbounded_send((peer, buf.clone(), MessageType::Data)).unwrap();
 										self.client_tunnels.insert(peer, (_s, SystemTime::now()));
@@ -246,7 +246,7 @@ impl UDPProxy {
 								*tm = SystemTime::now();
 							},
 							Err(e) => {
-								warn!("recv_from {:?} returned error {}, {:?}", socket_recv, e, e);
+								warn!("[UDP] recv_from {:?} returned error {}, {:?}", socket_recv, e, e);
 								break;
 							}
 						}
@@ -264,11 +264,11 @@ impl UDPProxy {
 						for (k, v) in (&mut self.client_tunnels).iter(){
 							let sec = v.1.elapsed().unwrap().as_secs();
 							if sec > 120{
-								info!("Client {}:{} is timeout({}s)", k.ip(), k.port(), sec);
+								info!("[UDP] Client {}:{} is timeout({}s)", k.ip(), k.port(), sec);
 								v.0.unbounded_send((k.clone(), empty.clone(), MessageType::Terminate)).unwrap();
 								tbd.push(k.to_owned());
 							} else {
-								debug!("Client {}:{} is good. ({}s)", k.ip(), k.port(), sec);
+								debug!("[UDP] Client {}:{} is good. ({}s)", k.ip(), k.port(), sec);
 							}
 						}
 
@@ -282,7 +282,7 @@ impl UDPProxy {
 			Ok(())
 		};
 
-		info!("PCI Controller is running on port {}", &signal_addr);
+		info!("[PCI] [UDP] Controller is running on port {}", &signal_addr);
 		let udp_controller = async move {
 			sync(signal_addr, remote_signal_mutex, stop_signal_mutex).await;
 			Ok(())

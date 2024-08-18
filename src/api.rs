@@ -19,14 +19,14 @@ pub struct APIServer {
 impl APIServer {
 	pub async fn start(&self) {
 		let api_server = format!("{}:{}", &self.server, &self.port);
-		info!("Starting API Server on {}", &api_server);
+		info!("[API] Starting API Server on {}", &api_server);
 		match TcpListener::bind(&api_server).await {
 			Ok(listener) => {
 				loop {
 					match listener.accept().await {
 						Ok((stream, _)) => {
 							if let Err(e) = stream.readable().await {
-								error!("Failed to read from stream: {}", e);
+								error!("[API] Failed to read from stream: {}", e);
 								continue;
 							};
 							let mut buffer = [0; 1024];
@@ -42,67 +42,67 @@ impl APIServer {
 													let protocol = &command.protocol;
 													match protocol.as_str() {
 														"TCP" => {
-															info!("Starting TCP Proxy {} -> {}", &listen_addr, &remote_addr);
+															info!("[API] Starting TCP Proxy {} -> {}", &listen_addr, &remote_addr);
 															let tcp_proxy = TCPProxy::new(format!("{}:{}", self.control_tcp_addr, command.listen_port), listen_addr, remote_addr);
 															tokio::spawn(async move {
 																tcp_proxy.run().await.unwrap();
 															});
 														},
 														"UDP" => {
-															info!("Starting UDP Proxy {} -> {}", &listen_addr, &remote_addr);
+															info!("[API] Starting UDP Proxy {} -> {}", &listen_addr, &remote_addr);
 															let mut udp_proxy = UDPProxy::new(format!("{}:{}", self.control_udp_addr, command.listen_port), listen_addr, remote_addr);
 															tokio::spawn(async move {
 																udp_proxy.run().await.unwrap();
 															});
 														}
 														_ => {
-															error!("Unsupported protocol: {}", protocol);
+															error!("[API] Unsupported protocol: {}", protocol);
 														}
 													}
 												},
 												_ => {
-													error!("Unknown command: {}", command.property);
+													error!("[API] Unknown command: {}", command.property);
 												}
 											}
 										},
 										Err(e) => {
-											error!("Failed to parse command: {}", e);
+											error!("[API] Failed to parse command: {}", e);
 										}
 									}
 								},
 								Err(e) => {
-									error!("Failed to read from stream: {}", e);
+									error!("[API] Failed to read from stream: {}", e);
 								}
 							}
 						},
 						Err(e) => {
-						error!("Failed to accept: {}", e);
+						error!("[API] Failed to accept: {}", e);
 						}
 					}
 				}
 			},
 			Err(e) => {
-					error!("Failed to bind: {}", e);
+					error!("[API] Failed to bind: {}", e);
 			}
 		}
 	}
 }
 
 pub async fn sync(signal_addr: String, remote_signal: Arc<Mutex<String>>, stop_signal: Arc<Mutex<bool>>) {
-	info!("PCI Controller is running on port {}", signal_addr);
+	info!("[PCI] Controller is running on port {}", signal_addr);
 	match TcpListener::bind(signal_addr).await {
 		Ok(signal_port) => {
-			info!("Listening on {}", signal_port.local_addr().unwrap());
+			info!("[PCI] Listening on {}", signal_port.local_addr().unwrap());
 			loop {
 				match signal_port.accept().await {
 					Ok((stream, _)) => {
 						if let Err(e) = stream.readable().await {
-							error!("Failed to read from stream: {}", e);
+							error!("[PCI] Failed to read from stream: {}", e);
 							continue;
 						};
 						let mut buf = [0; 1024];
 						if let Err(e) = stream.readable().await {
-							error!("Failed to read from stream: {}", e);
+							error!("[PCI] Failed to read from stream: {}", e);
 							continue;
 						};
 						match stream.try_read(&mut buf) {
@@ -113,40 +113,40 @@ pub async fn sync(signal_addr: String, remote_signal: Arc<Mutex<String>>, stop_s
 									Ok(command) => {
 										match command.property.as_str() {
 											"STOP" => {
-												info!("Stopping TCP Proxy");
+												info!("[PCI] Stopping Proxy");
 												let mut stop = stop_signal.lock().unwrap();
 												*stop = true;
 												break;
 											},
 											"UPDATE" => {
 												let parameter = command.parameter.unwrap().clone();
-												info!("Updating remote address {} -> {}", remote_signal.lock().unwrap(), &parameter);
+												info!("[PCI] Updating remote address {} -> {}", remote_signal.lock().unwrap(), &parameter);
 												let mut remote = remote_signal.lock().unwrap();
 												*remote = parameter;
 											},
 											_ => {
-												error!("Unknown command: {}", command.property);
+												error!("[PCI] Unknown command: {}", command.property);
 											}
 										}
 									},
 									Err(e) => {
-											error!("Failed to parse command: {}", e);
+											error!("[PCI] Failed to parse command: {}", e);
 									}
 								}
 							},
 							Err(e) => {
-								error!("Failed to read from stream: {}", e);
+								error!("[PCI] Failed to read from stream: {}", e);
 							}
 						}
 					},
 					Err(e) => {
-						error!("Failed to accept: {}", e);
+						error!("[PCI] Failed to accept: {}", e);
 					}
 				}
 			}
 		},
 		Err(e) => {
-				error!("Failed to bind: {}", e);
+				error!("[PCI] Failed to bind: {}", e);
 		}
 	}
 }
