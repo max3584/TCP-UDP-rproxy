@@ -7,10 +7,7 @@
 git clone https://github.com/max3584/TCP-UDP-rproxy.git
 
 # -- reverse proxy build
-cd forward
-cargo build --release
-cp target/release/forward ../forward
-cd ..
+cd TCP-UDP-rproxy
 
 ./forward -loglevel 2 \
           -debug false \
@@ -22,7 +19,6 @@ cd ..
 ```
 
 ## reverse proxy setup
-<div>事前にRustのRuntimeを入れておいてください現在は、Build済みのものは配布していません。</div>
 <div>APIでTCP/UDPのデータReverseProxyを追加することができます。</div>
 <div>例：</div>
 
