@@ -89,20 +89,20 @@ impl APIServer {
 }
 
 pub async fn sync(signal_addr: String, remote_signal: Arc<Mutex<String>>, stop_signal: Arc<Mutex<bool>>) {
-	info!("[PCI] Controller is running on port {}", signal_addr);
+	info!("[IPC] Controller is running on port {}", signal_addr);
 	match TcpListener::bind(signal_addr).await {
 		Ok(signal_port) => {
-			info!("[PCI] Listening on {}", signal_port.local_addr().unwrap());
+			info!("[IPC] Listening on {}", signal_port.local_addr().unwrap());
 			loop {
 				match signal_port.accept().await {
 					Ok((stream, _)) => {
 						if let Err(e) = stream.readable().await {
-							error!("[PCI] Failed to read from stream: {}", e);
+							error!("[IPC] Failed to read from stream: {}", e);
 							continue;
 						};
 						let mut buf = [0; 1024];
 						if let Err(e) = stream.readable().await {
-							error!("[PCI] Failed to read from stream: {}", e);
+							error!("[IPC] Failed to read from stream: {}", e);
 							continue;
 						};
 						match stream.try_read(&mut buf) {
@@ -113,40 +113,40 @@ pub async fn sync(signal_addr: String, remote_signal: Arc<Mutex<String>>, stop_s
 									Ok(command) => {
 										match command.property.as_str() {
 											"STOP" => {
-												info!("[PCI] Stopping Proxy");
+												info!("[IPC] Stopping Proxy");
 												let mut stop = stop_signal.lock().unwrap();
 												*stop = true;
 												break;
 											},
 											"UPDATE" => {
 												let parameter = command.parameter.unwrap().clone();
-												info!("[PCI] Updating remote address {} -> {}", remote_signal.lock().unwrap(), &parameter);
+												info!("[IPC] Updating remote address {} -> {}", remote_signal.lock().unwrap(), &parameter);
 												let mut remote = remote_signal.lock().unwrap();
 												*remote = parameter;
 											},
 											_ => {
-												error!("[PCI] Unknown command: {}", command.property);
+												error!("[IPC] Unknown command: {}", command.property);
 											}
 										}
 									},
 									Err(e) => {
-											error!("[PCI] Failed to parse command: {}", e);
+											error!("[IPC] Failed to parse command: {}", e);
 									}
 								}
 							},
 							Err(e) => {
-								error!("[PCI] Failed to read from stream: {}", e);
+								error!("[IPC] Failed to read from stream: {}", e);
 							}
 						}
 					},
 					Err(e) => {
-						error!("[PCI] Failed to accept: {}", e);
+						error!("[IPC] Failed to accept: {}", e);
 					}
 				}
 			}
 		},
 		Err(e) => {
-				error!("[PCI] Failed to bind: {}", e);
+				error!("[IPC] Failed to bind: {}", e);
 		}
 	}
 }

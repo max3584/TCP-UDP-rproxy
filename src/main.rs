@@ -77,7 +77,7 @@ async fn main() {
     info!("Starting application...");
 
 
-    // PCI Controller Config
+    // IPC Controller Config
     let config = APIServer {
         server: options.api_addr,
         port: options.api_port,
