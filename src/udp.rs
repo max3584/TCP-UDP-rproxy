@@ -282,7 +282,7 @@ impl UDPProxy {
 			Ok(())
 		};
 
-		info!("[PCI] [UDP] Controller is running on port {}", &signal_addr);
+		info!("[IPC] [UDP] Controller is running on port {}", &signal_addr);
 		let udp_controller = async move {
 			sync(signal_addr, remote_signal_mutex, stop_signal_mutex).await;
 			Ok(())

@@ -134,7 +134,7 @@ impl TCPProxy {
 			}
 		};
 
-		info!("[PCI] [TCP] Controller is running on port {}", signal_addr);
+		info!("[IPC] [TCP] Controller is running on port {}", signal_addr);
 		let control = async move {
 			sync(signal_addr, remote_signal, stop_signal).await;
 			Ok(())
