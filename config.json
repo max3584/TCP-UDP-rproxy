@@ -1,7 +1,0 @@
-{
-	"database" : "test1",
-	"server" : "test0.dev.home",
-	"port" : 3306,
-	"username" : "debug-user",
-	"password": "debug_pass"
-}
